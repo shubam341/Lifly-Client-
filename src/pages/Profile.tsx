@@ -409,11 +409,13 @@ const Profile = () => {
   // Fetch profile data from backend
   const fetchProfile = async () => {
     if (!user) return;
-    try {
-      const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
-      const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${user.sub}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        try {
+//       const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
+// // Instead of calling /profile directly
+// const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
+//   headers: { Authorization: `Bearer ${token}` },
+// });
+
 
       if (!res.ok) {
         const errorText = await res.text();
