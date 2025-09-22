@@ -13,6 +13,9 @@ const Search = () => {
 
   // Dummy data for Editor's Picks (unchanged)
   const editorPicks = [
+
+
+
     {
       id: 1,
       title: "Clean Girl Routine",

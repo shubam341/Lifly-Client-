@@ -46,9 +46,11 @@ const Profile = () => {
     if (!user) return;
     try {
       const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
-const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/api/users/${encodeURIComponent(user.sub)}`, {
+// Instead of calling /profile directly
+const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
   headers: { Authorization: `Bearer ${token}` },
 });
+
 
 console.log("Access token:", token);
 
