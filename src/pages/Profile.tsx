@@ -41,6 +41,11 @@ const Profile = () => {
   const location = useLocation();
   const { user, logout, getAccessTokenSilently } = useAuth0();
 
+const [name, setName] = useState(user.name);
+const [bio, setBio] = useState(user.bio);
+const [profilePicture, setProfilePicture] = useState(user.profilePicture);
+
+
   // Fetch profile data from backend
 const fetchProfile = async () => {
   if (!user) return;
@@ -56,9 +61,22 @@ const fetchProfile = async () => {
     //   headers: { Authorization: `Bearer ${token}` },
     // });
 
-    const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${encodeURIComponent(user.sub)}`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+   const res = await fetch(
+  `${import.meta.env.VITE_USER_SERVICE_URL}/${encodeURIComponent(user.sub)}`,
+  {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name,          // from state
+      bio,           // from state
+      profilePicture // from state
+    }),
+  }
+);
+
 
 
     console.log("Access token:", token);
