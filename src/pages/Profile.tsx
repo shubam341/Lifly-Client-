@@ -45,11 +45,24 @@ const Profile = () => {
   const fetchProfile = async () => {
     if (!user) return;
     try {
-      const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
-// Instead of calling /profile directly
-const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
+//       const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
+// // Instead of calling /profile directly
+// const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
+//   headers: { Authorization: `Bearer ${token}` },
+// });
+
+
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+const token = await getAccessTokenSilently({ audience: import.meta.env.VITE_AUTH0_AUDIENCE });
+
+// Fetch user profile
+const res = await fetch(`${API_URL}/users/${userId}`, {
   headers: { Authorization: `Bearer ${token}` },
 });
+
+if (!res.ok) throw new Error("Failed to fetch profile");
+const data = await res.json();
+
 
 
 console.log("Access token:", token);
