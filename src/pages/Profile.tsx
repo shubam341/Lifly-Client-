@@ -41,28 +41,22 @@ const Profile = () => {
   const location = useLocation();
   const { user, logout, getAccessTokenSilently } = useAuth0();
 
-
-  //       const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
-// // Instead of calling /profile directly
-// const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
-//   headers: { Authorization: `Bearer ${token}` },
-// });
-
- const fetchProfile = async () => {
+  // Fetch profile data from backend
+const fetchProfile = async () => {
   if (!user) return;
 
   try {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
-    const token = await getAccessTokenSilently({
-      audience: import.meta.env.VITE_AUTH0_AUDIENCE
-    });
+    const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
 
-    // Use Auth0 user.sub as ID
-    const userId = user.sub;
+    // ✅ Define userId using Auth0's unique identifier
+    const userId = encodeURIComponent(user.sub); // encodes the | symbol
 
-    const res = await fetch(`${API_URL}/users/${encodeURIComponent(userId)}`, {
+    // Fetch profile from backend
+    const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    console.log("Access token:", token);
 
     if (!res.ok) {
       const errorText = await res.text();
@@ -77,9 +71,6 @@ const Profile = () => {
       bio: data.bio || "",
       avatar: data.profilePicture || "/placeholder.svg",
     });
-
-    console.log("Profile data:", data);
-    console.log("Access token:", token);
   } catch (err: any) {
     console.error("Error fetching profile:", err.message);
     alert("Failed to load profile. Please try again.");
