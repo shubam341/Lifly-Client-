@@ -41,49 +41,51 @@ const Profile = () => {
   const location = useLocation();
   const { user, logout, getAccessTokenSilently } = useAuth0();
 
-  // Fetch profile data from backend
-  const fetchProfile = async () => {
-    if (!user) return;
-    try {
-//       const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
+
+  //       const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
 // // Instead of calling /profile directly
 // const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
 //   headers: { Authorization: `Bearer ${token}` },
 // });
 
+ const fetchProfile = async () => {
+  if (!user) return;
 
-const API_URL = import.meta.env.VITE_BACKEND_URL;
-const token = await getAccessTokenSilently({ audience: import.meta.env.VITE_AUTH0_AUDIENCE });
+  try {
+    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const token = await getAccessTokenSilently({
+      audience: import.meta.env.VITE_AUTH0_AUDIENCE
+    });
 
-// Fetch user profile
-const res = await fetch(`${API_URL}/users/${userId}`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+    // Use Auth0 user.sub as ID
+    const userId = user.sub;
 
-if (!res.ok) throw new Error("Failed to fetch profile");
-const data = await res.json();
+    const res = await fetch(`${API_URL}/users/${encodeURIComponent(userId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-
-
-console.log("Access token:", token);
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to fetch profile: ${res.status} - ${errorText}`);
-      }
-
-      const data = await res.json();
-      setProfile({
-        name: data.name || "",
-            userId: data.userId || data.auth0Id, 
-        bio: data.bio || "",
-        avatar: data.profilePicture || "/placeholder.svg",
-      });
-    } catch (err: any) {
-      console.error("Error fetching profile:", err.message);
-      alert("Failed to load profile. Please try again.");
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch profile: ${res.status} - ${errorText}`);
     }
-  };
+
+    const data = await res.json();
+
+    setProfile({
+      name: data.name || "",
+      userId: data.userId || data.auth0Id,
+      bio: data.bio || "",
+      avatar: data.profilePicture || "/placeholder.svg",
+    });
+
+    console.log("Profile data:", data);
+    console.log("Access token:", token);
+  } catch (err: any) {
+    console.error("Error fetching profile:", err.message);
+    alert("Failed to load profile. Please try again.");
+  }
+};
+
 
   useEffect(() => {
     const updatedProfile = (location.state as any)?.updatedProfile;
