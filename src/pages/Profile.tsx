@@ -53,31 +53,24 @@ const fetchProfile = async () => {
   try {
     const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
 
-    // ✅ Define userId using Auth0's unique identifier
-    const userId = encodeURIComponent(user.sub); // encodes the | symbol
+    const userId = encodeURIComponent(user.sub);
 
-    // Fetch profile from backend
-    // const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
-    //   headers: { Authorization: `Bearer ${token}` },
-    // });
+    // Use production backend URL
+    const API_URL = import.meta.env.VITE_USER_SERVICE_URL;
 
-   const res = await fetch(
-  `${import.meta.env.VITE_USER_SERVICE_URL}/${encodeURIComponent(user.sub)}`,
-  {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      name,          // from state
-      bio,           // from state
-      profilePicture // from state
-    }),
-  }
-);
-
-
+    // PUT request to update profile
+    const res = await fetch(`${API_URL}/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name,          // from state
+        bio,           // from state
+        profilePicture // from state
+      }),
+    });
 
     console.log("Access token:", token);
 
@@ -99,6 +92,50 @@ const fetchProfile = async () => {
     alert("Failed to load profile. Please try again.");
   }
 };
+
+
+
+// const fetchProfile = async () => {
+//   if (!user) return;
+
+//   try {
+//     const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
+
+//     // ✅ Use Auth0 unique user ID
+//     const userId = encodeURIComponent(user.sub);
+
+//     // ✅ Use environment variable for backend URL
+//     const API_URL = import.meta.env.VITE_USER_SERVICE_URL;
+
+//     // Fetch profile from backend (GET request)
+//     const res = await fetch(`${API_URL}/api/users/${userId}`, {
+//       method: "GET", // <-- use GET for fetching profile
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+
+//     console.log("Access token:", token);
+
+//     if (!res.ok) {
+//       const errorText = await res.text();
+//       throw new Error(`Failed to fetch profile: ${res.status} - ${errorText}`);
+//     }
+
+//     const data = await res.json();
+
+//     setProfile({
+//       name: data.name || "",
+//       userId: data.userId || data.auth0Id,
+//       bio: data.bio || "",
+//       avatar: data.profilePicture || "/placeholder.svg",
+//     });
+//   } catch (err: any) {
+//     console.error("Error fetching profile:", err.message);
+//     alert("Failed to load profile. Please try again.");
+//   }
+// };
 
 
   useEffect(() => {
