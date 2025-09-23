@@ -52,9 +52,14 @@ const fetchProfile = async () => {
     const userId = encodeURIComponent(user.sub); // encodes the | symbol
 
     // Fetch profile from backend
-    const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${userId}`, {
+    //   headers: { Authorization: `Bearer ${token}` },
+    // });
+
+    const res = await fetch(`${import.meta.env.VITE_USER_SERVICE_URL}/${encodeURIComponent(user.sub)}`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
 
     console.log("Access token:", token);
 
