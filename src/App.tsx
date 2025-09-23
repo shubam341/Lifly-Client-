@@ -68,7 +68,7 @@ console.log("Access token:", token);
     }
   }, [isAuthenticated, getAccessTokenSilently, API_URL]);
 
-  if (isLoading) return <div>Loading Auth0...</div>;
+  // if (isLoading) return <div>Loading Auth0...</div>;
 
   return (
     <QueryClientProvider client={queryClient}>
