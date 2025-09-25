@@ -269,7 +269,7 @@ const fetchProfile = async () => {
                 variant="outline"
                 size="sm"
                 className="bg-white/20 border-white/30 text-white hover:bg-white/30 px-2 py-1 text-xs"
-                onClick={() => logout({ returnTo: window.location.origin })}
+                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
               >
                 Logout
               </Button>
