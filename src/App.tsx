@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 import Home from "./pages/Home";
@@ -20,36 +20,41 @@ import Scan from "./pages/Scan";
 
 const queryClient = new QueryClient();
 
+// ✅ Protected route wrapper
+function ProtectedRoute({ children }: { children: JSX.Element }) {
+  const { isAuthenticated, isLoading } = useAuth0();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // show spinner or skeleton here
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login-required" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
 const App = () => {
-  const { isAuthenticated, isLoading, getAccessTokenSilently, user } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
 
-  const API_URL = import.meta.env.VITE_BACKEND_URL; // Auth service URL
+  const API_URL = import.meta.env.VITE_BACKEND_URL;
   const [tokenVerified, setTokenVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
     const verifyToken = async () => {
       if (isAuthenticated) {
         try {
-          // Get Auth0 access token
-      const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
-console.log("Access token:", token);
+          const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
+          console.log("Access token:", token);
 
-
-          // Call backend /protected route
           const res = await fetch(`${API_URL}/protected`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           });
 
-          if (res.ok) {
-            console.log("Backend verified token: true");
-            setTokenVerified(true);
-          } else {
-            console.log("Backend verified token: false");
-            setTokenVerified(false);
-          }
+          setTokenVerified(res.ok);
         } catch (err) {
           console.log("Backend verified token: false", err);
           setTokenVerified(false);
@@ -68,29 +73,11 @@ console.log("Access token:", token);
     }
   }, [isAuthenticated, getAccessTokenSilently, API_URL]);
 
-  // if (isLoading) return <div>Loading Auth0...</div>;
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {tokenVerified !== null && (
-          <div
-            style={{
-              position: "fixed",
-              top: 10,
-              left: 10,
-              padding: "6px 12px",
-              borderRadius: "6px",
-              // backgroundColor: tokenVerified ? "#22c55e" : "#ef4444",
-              color: "#fff",
-              zIndex: 1000,
-            }}
-          >
-            {/* Token Verified: {tokenVerified ? "✅ true" : "❌ false"} */}
-          </div>
-        )}
 
         <BrowserRouter>
           {showLoginAlert && (
@@ -113,17 +100,79 @@ console.log("Access token:", token);
           )}
 
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Search />} />
             <Route path="/post/:id" element={<PostDetail />} />
-            <Route path="/menu" element={isAuthenticated ? <Menu /> : <LoginRequiredPage message="Login to access menu" />} />
-            <Route path="/store" element={isAuthenticated ? <div>Store</div> : <LoginRequiredPage message="Login to go shopping" />} />
-            <Route path="/messages" element={isAuthenticated ? <div>Messages</div> : <LoginRequiredPage message="Login to send messages" />} />
-            <Route path="/profile" element={isAuthenticated ? <Profile /> : <LoginRequiredPage message="Login to show yourself" />} />
-            <Route path="/edit-profile" element={isAuthenticated ? <EditProfile /> : <LoginRequiredPage message="Login to edit your profile" />} />
-            <Route path="/upload" element={isAuthenticated ? <Upload /> : <LoginRequiredPage message="Login to upload your post" />} />
-            <Route path="/create-post" element={isAuthenticated ? <CreatePost /> : <LoginRequiredPage message="Login to create a post" />} />
-            <Route path="/scan" element={isAuthenticated ? <Scan /> : <LoginRequiredPage message="Login to use scanner" />} />
+            <Route path="/login-required" element={<LoginRequiredPage />} />
+
+            {/* Protected routes */}
+            <Route
+              path="/menu"
+              element={
+                <ProtectedRoute>
+                  <Menu />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/store"
+              element={
+                <ProtectedRoute>
+                  <div>Store</div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <div>Messages</div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit-profile"
+              element={
+                <ProtectedRoute>
+                  <EditProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute>
+                  <Upload />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-post"
+              element={
+                <ProtectedRoute>
+                  <CreatePost />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/scan"
+              element={
+                <ProtectedRoute>
+                  <Scan />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Not found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
