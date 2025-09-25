@@ -104,7 +104,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Search />} />
             <Route path="/post/:id" element={<PostDetail />} />
-            <Route path="/login-required" element={<LoginRequiredPage />} />
+            <Route path="/login-required" element={<LoginRequiredPage message={""} />} />
 
             {/* Protected routes */}
             <Route
