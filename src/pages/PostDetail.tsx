@@ -45,12 +45,16 @@ const PostDetail = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   const postImageRef = useRef<HTMLDivElement>(null);
+ const API_URL = import.meta.env.VITE_POST_SERVICE_URL;
 
   // 🔹 Fetch post data
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_POST_SERVICE_URL}/api/posts/${id}`);
+   
+
+const res = await fetch(`${API_URL}/${id}`);
+
         const data = await res.json();
 
         setPost({
