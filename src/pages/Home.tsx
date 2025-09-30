@@ -1,32 +1,85 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Radio, Search } from "lucide-react"; 
 import PostGrid from "@/components/PostGrid";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useNavigate } from "react-router-dom";
-import { dummyPosts, Post } from "@/data/postData";
 import FollowingPage from "./Followingpage"; 
-import { useAuth0 } from "@auth0/auth0-react";   // ✅ Auth0
+import { useAuth0 } from "@auth0/auth0-react";
+
+// 🔹 Post type for frontend
+interface Post {
+  id: string;
+  image: string;
+  username: string;
+  avatar?: string;
+  description?: string;
+  likes?: number;
+  comments?: number;
+  isFollowed?: boolean;
+  tabs?: string[];
+  category?: string;
+}
+
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Explore");
   const [activeCategory, setActiveCategory] = useState("All"); 
+  const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
 
-  // ✅ Auth0 hooks
   const { isAuthenticated, loginWithRedirect, getAccessTokenSilently } = useAuth0();
 
   const tabs = ["Following", "Explore", "Nearby"];
-  const categories = [
-    "All", "Fashion", "Personal care", "Food", "Home", "Health", "Travel"
-  ];
+  const categories = ["All", "Fashion", "Personal care", "Food", "Home", "Health", "Travel"];
 
-  // Filter posts based on tab and category
-  const filteredPosts: Post[] = dummyPosts.filter((post) => {
+  // 🔹 Helper to generate full media URL
+const getMediaUrl = (mediaPath: string | undefined) => {
+  if (!mediaPath) return "";
+  if (mediaPath.startsWith("http")) return mediaPath;
+  return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
+};
+
+
+  // 🔹 Fetch posts and map to frontend format
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/posts`);
+        const data = await res.json();
+
+    const mappedPosts: Post[] = data.map((p: any) => ({
+  id: p._id,
+  title: p.title,
+  image: getMediaUrl(p.mediaUrl),
+  username: p.authorName,
+  avatar: p.authorAvatar ? getMediaUrl(p.authorAvatar) : "",// blank if not uploaded
+  description: p.bio || "",
+  category: p.category,
+  likes: p.likesCount || 0,
+  comments: p.commentsCount || 0,
+  createdAt: p.createdAt,
+  isFollowed: p.isFollowed || false,
+  tabs: p.tabs || [],
+  commentsList: p.commentsList || [],
+}));
+
+
+        setPosts(mappedPosts);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  // 🔹 Filter posts by tab and category
+  const filteredPosts: Post[] = posts.filter((post) => {
     if (activeCategory === "All") {
       if (activeTab === "Following") return post.isFollowed;
       if (activeTab === "Explore") return true;
-      if (activeTab === "Nearby") return post.tabs.includes("Nearby");
+      if (activeTab === "Nearby") return post.tabs?.includes("Nearby");
     }
 
     if (activeTab === "Following") {
@@ -34,27 +87,23 @@ const Home = () => {
     } else if (activeTab === "Explore") {
       return post.category === activeCategory;
     } else if (activeTab === "Nearby") {
-      return post.tabs.includes("Nearby") && post.category === activeCategory;
+      return post.tabs?.includes("Nearby") && post.category === activeCategory;
     }
 
     return false;
   });
 
-  // ✅ Backend test function (only works if user is logged in)
+  // 🔹 Backend test function
   const testBackend = async () => {
     if (!isAuthenticated) {
-      // redirect to login if user is not logged in
       loginWithRedirect();
-      
       return;
     }
 
     try {
       const token = await getAccessTokenSilently();
-      const response = await fetch("http://localhost:4000/protected", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/protected`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       console.log("✅ Backend response:", data);
@@ -117,17 +166,14 @@ const Home = () => {
       <div className="pb-20">
         {activeTab === "Following" ? (
           <FollowingPage
-            posts={dummyPosts.filter((post) =>
-              post.isFollowed &&
-              (activeCategory === "All" || post.category === activeCategory)
-            )}
+            posts={filteredPosts.filter((post) => post.isFollowed)}
           />
         ) : (
           <PostGrid posts={filteredPosts} />
         )}
       </div>
 
-      {/* ✅ Backend test button */}
+      {/* Backend test button */}
       <div className="mt-8 flex justify-center">
         <Button onClick={testBackend}>
           {isAuthenticated ? "Test Backend" : "Login to Test Backend"}

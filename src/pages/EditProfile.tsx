@@ -337,7 +337,7 @@ const EditProfile = () => {
       const profileData = {
         auth0Id: user.sub,
         name: formData.name,
-        userId: formData.userId,
+        // userId: formData.userId,
         bio: formData.bio,
         profilePicture: formData.avatar,
       };
@@ -455,13 +455,15 @@ const EditProfile = () => {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="userId">User ID *</Label>
-            <Input
-              id="userId"
-              value={formData.userId}
-              onChange={e => handleInputChange("userId", e.target.value)}
-            />
-          </div>
+  <Label htmlFor="userId">Email</Label>
+  <Input
+    id="userId"
+    value={user?.email || ""}
+    disabled
+    className="bg-gray-200 cursor-not-allowed"
+  />
+</div>
+
 
           <div className="grid gap-2">
             <Label htmlFor="bio">Bio</Label>
