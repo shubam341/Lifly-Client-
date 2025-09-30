@@ -36,7 +36,10 @@ const Home = () => {
   // 🔹 Helper to generate full media URL
 const getMediaUrl = (mediaPath: string | undefined) => {
   if (!mediaPath) return "";
-  if (mediaPath.startsWith("http")) return mediaPath;
+  if (mediaPath.startsWith("http")) {
+    // Replace localhost with Render domain if deploying
+    return mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL);
+  }
   return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
 };
 
