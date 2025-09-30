@@ -88,6 +88,13 @@ const Profile = () => {
     }
   };
 
+const getMediaUrl = (mediaPath: string | undefined) => {
+  if (!mediaPath) return "/placeholder.svg";
+  if (mediaPath.startsWith("http")) return mediaPath;
+  return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
+};
+
+
   useEffect(() => {
     const updatedProfile = (location.state as any)?.updatedProfile;
     if (updatedProfile) {
