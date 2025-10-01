@@ -45,43 +45,44 @@ const PostDetail = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   const postImageRef = useRef<HTMLDivElement>(null);
- const API_URL = import.meta.env.VITE_POST_SERVICE_URL || "http://localhost:5005" ;
+  const API_URL = import.meta.env.VITE_POST_SERVICE_URL || "http://localhost:5005";
 
- const getMediaUrl = (mediaPath: string | undefined) => {
-  if (!mediaPath) return "";
+  // 🔹 Normalize media URLs
+  const getMediaUrl = (mediaPath: string | undefined) => {
+    if (!mediaPath) return "/placeholder.svg";
 
-  // If it's already a full URL
-  if (mediaPath.startsWith("http")) return mediaPath;
-
-  // If it's a relative path from backend
-  return `${import.meta.env.VITE_POST_SERVICE_URL}${mediaPath.startsWith("/") ? "" : "/"}${mediaPath}`;
-};
-
-
-  // 🔹 Fetch post data
- useEffect(() => {
-  const fetchPost = async () => {
-    try {
-      const res = await fetch(`${API_URL}/${id}`);
-      const data = await res.json();
-
-      setPost({
-        ...data,
-        mediaUrl: getMediaUrl(data.mediaUrl),
-        authorAvatar: getMediaUrl(data.authorAvatar),
-        likes: data.likesCount || 0,
-        comments: data.commentsCount || 0,
-        isFollowed: data.isFollowed || false,
-        isSaved: data.isSaved || false,
-      });
-    } catch (err) {
-      console.error("Error fetching post:", err);
+    // Replace localhost or insecure HTTP with backend URL
+    if (mediaPath.startsWith("http")) {
+      return mediaPath.replace("https://lifly-ecommerce-server.onrender.com", import.meta.env.VITE_BACKEND_URL);
     }
+
+    // Relative path from backend
+    return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
   };
 
-  fetchPost();
-}, [id]);
+  // 🔹 Fetch post data
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const res = await fetch(`${API_URL}/${id}`);
+        const data = await res.json();
 
+        setPost({
+          ...data,
+          mediaUrl: getMediaUrl(data.mediaUrl),
+          authorAvatar: getMediaUrl(data.authorAvatar),
+          likes: data.likesCount || 0,
+          comments: data.commentsCount || 0,
+          isFollowed: data.isFollowed || false,
+          isSaved: data.isSaved || false,
+        });
+      } catch (err) {
+        console.error("Error fetching post:", err);
+      }
+    };
+
+    fetchPost();
+  }, [id]);
 
   // 🔹 Scroll sticky author bar
   useEffect(() => {
@@ -136,7 +137,6 @@ const PostDetail = () => {
       }
     }
   };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
