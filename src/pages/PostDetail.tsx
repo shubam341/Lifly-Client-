@@ -45,35 +45,43 @@ const PostDetail = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   const postImageRef = useRef<HTMLDivElement>(null);
- const API_URL = import.meta.env.VITE_POST_SERVICE_URL;
+ const API_URL = import.meta.env.VITE_POST_SERVICE_URL || "http://localhost:5005" ;
+
+ const getMediaUrl = (mediaPath: string | undefined) => {
+  if (!mediaPath) return "";
+
+  // If it's already a full URL
+  if (mediaPath.startsWith("http")) return mediaPath;
+
+  // If it's a relative path from backend
+  return `${import.meta.env.VITE_POST_SERVICE_URL}${mediaPath.startsWith("/") ? "" : "/"}${mediaPath}`;
+};
+
 
   // 🔹 Fetch post data
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-   
+ useEffect(() => {
+  const fetchPost = async () => {
+    try {
+      const res = await fetch(`${API_URL}/${id}`);
+      const data = await res.json();
 
-const res = await fetch(`${API_URL}/${id}`);
+      setPost({
+        ...data,
+        mediaUrl: getMediaUrl(data.mediaUrl),
+        authorAvatar: getMediaUrl(data.authorAvatar),
+        likes: data.likesCount || 0,
+        comments: data.commentsCount || 0,
+        isFollowed: data.isFollowed || false,
+        isSaved: data.isSaved || false,
+      });
+    } catch (err) {
+      console.error("Error fetching post:", err);
+    }
+  };
 
-        const data = await res.json();
+  fetchPost();
+}, [id]);
 
-        setPost({
-          ...data,
-          likes: data.likesCount || 0,
-          comments: data.commentsCount || 0,
-          isFollowed: data.isFollowed || false,
-          isSaved: data.isSaved || false,
-        });
-
-        setIsFollowed(data.isFollowed || false);
-        setIsSaved(data.isSaved || false);
-      } catch (err) {
-        console.error("Error fetching post:", err);
-      }
-    };
-
-    fetchPost();
-  }, [id]);
 
   // 🔹 Scroll sticky author bar
   useEffect(() => {
