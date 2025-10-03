@@ -50,7 +50,7 @@ const Profile = () => {
       const userId = encodeURIComponent(user.sub);
       const API_URL = import.meta.env.VITE_USER_SERVICE_URL;
 
-
+      
       const res = await fetch(`${API_URL}/${userId}`, {
         method: "GET",
         headers: {
@@ -78,23 +78,30 @@ const Profile = () => {
   };
 
   const fetchUserPosts = async () => {
-    if (!user) return;
-    try {
+  if (!user) return;
+  try {
+    const API_URL = import.meta.env.VITE_POST_SERVICE_URL;
+    const res = await fetch(`${API_URL}?authorId=${encodeURIComponent(user.sub)}`);
+    if (!res.ok) throw new Error("Failed to fetch posts");
+    const data = await res.json();
 
-  const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/posts`;
-      const res = await fetch(`${API_URL}?authorId=${encodeURIComponent(user.sub)}`);
-      if (!res.ok) throw new Error("Failed to fetch posts");
-      const data = await res.json();
-      setUserPosts(data);
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-    }
-  };
+    // Map posts to include proper media URL
+    const mappedPosts = data.map((post: any) => ({
+      ...post,
+      mediaUrl: getMediaUrl(post.mediaUrl), // <-- fix here
+    }));
+
+    setUserPosts(mappedPosts);
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+  }
+};
 
 const getMediaUrl = (mediaPath: string | undefined) => {
   if (!mediaPath) return "/placeholder.svg";
-  if (mediaPath.startsWith("http")) return mediaPath;
-  return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
+  return mediaPath.startsWith("http")
+    ? mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL)
+    : `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
 };
 
 
@@ -361,7 +368,7 @@ const getMediaUrl = (mediaPath: string | undefined) => {
                               onClick={() => navigate(`/post/${p._id}`, { state: { post: p } })}
                             >
                               <img
-                                src={p.mediaUrl || "/placeholder.svg"}
+                             src={p.mediaUrl || "/placeholder.svg"}
                                 alt={p.title}
                                 className="w-full h-full object-cover"
                               />
