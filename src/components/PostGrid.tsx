@@ -113,7 +113,6 @@ const PostGrid: React.FC<PostGridProps> = ({ posts }) => {
 
 export default PostGrid;
 
-
 // import { Heart, MessageCircle, Share } from "lucide-react";
 // import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 // import { useNavigate } from "react-router-dom";
@@ -121,7 +120,7 @@ export default PostGrid;
 
 // interface PostGridProps {
 //   posts: Post[];
-//   currentUserName?: string;
+//   handleLike: (postId: string) => void; // ✅ add handleLike prop
 // }
 
 // // Generate color from string for category
@@ -143,28 +142,20 @@ export default PostGrid;
 //   return colors[index];
 // };
 
-// const PostGrid: React.FC<PostGridProps> = ({ posts, currentUserName }) => {
+// const PostGrid: React.FC<PostGridProps> = ({ posts, handleLike }) => {
 //   const navigate = useNavigate();
 
-//   const handleShare = async (postId: string, postTitle: string) => {
+//   const handleShare = async (postId: string) => {
 //     const postUrl = `${window.location.origin}/post/${postId}`;
-//     const shareText = currentUserName
-//       ? `${currentUserName} wants you to check out this post: "${postTitle}"`
-//       : `Check out this post: "${postTitle}"`;
-
 //     if (navigator.share) {
 //       try {
-//         await navigator.share({
-//           title: "Check out this post",
-//           text: shareText,
-//           url: postUrl,
-//         });
+//         await navigator.share({ title: "Check out this post", url: postUrl });
 //       } catch (err) {
 //         console.error("Error sharing:", err);
 //       }
 //     } else {
 //       try {
-//         await navigator.clipboard.writeText(`${shareText} ${postUrl}`);
+//         await navigator.clipboard.writeText(postUrl);
 //         console.log("Post link copied to clipboard!");
 //       } catch {
 //         console.error("Failed to copy link");
@@ -175,15 +166,15 @@ export default PostGrid;
 //   return (
 //     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-2">
 //       {posts.map((post) => (
-//         <div key={post._id} className="bg-white rounded-lg border overflow-hidden">
+//         <div key={post.id} className="bg-white rounded-lg border overflow-hidden">
 //           {/* Post image */}
 //           <div
 //             className="cursor-pointer hover:opacity-90 transition-opacity duration-200"
-//             onClick={() => navigate(`/post/${post._id}`)}
+//             onClick={() => navigate(`/post/${post.id}`)}
 //           >
 //             <img
-//               src={post.mediaUrl || "/fallback-image.png"}
-//               alt={post.title || "Post image"}
+//               src={post.image || "/fallback-image.png"}
+//               alt={post.description || "Post image"}
 //               className="w-full h-[340px] sm:h-[380px] object-cover"
 //             />
 //           </div>
@@ -207,15 +198,17 @@ export default PostGrid;
 //             {/* Author info */}
 //             <div className="flex items-center space-x-1 mt-1">
 //               <Avatar className="w-6 h-6">
-//                 <AvatarFallback>{post.authorName ? post.authorName[0] : "U"}</AvatarFallback>
+//                 <AvatarFallback>{post.username ? post.username[0] : "U"}</AvatarFallback>
 //               </Avatar>
-//               <p className="text-xs text-gray-500 truncate">{post.authorName}</p>
+//               <p className="text-xs text-gray-500 truncate">{post.username}</p>
 //             </div>
 
 //             {/* Stats */}
 //             <div className="flex justify-between text-gray-600 mt-1 px-1">
-//               <div className="flex items-center space-x-1">
-//                 <Heart className="w-4 h-4" />
+//               <div className="flex items-center space-x-1 cursor-pointer" onClick={() => handleLike(post.id)}>
+//                 <Heart
+//                   className={`w-4 h-4 ${post.isLiked ? "fill-red-500 text-red-500" : "text-gray-500"}`}
+//                 />
 //                 <span className="text-sm">{post.likes}</span>
 //               </div>
 //               <div className="flex items-center space-x-1">
@@ -224,7 +217,7 @@ export default PostGrid;
 //               </div>
 //               <div
 //                 className="flex items-center space-x-1 cursor-pointer"
-//                 onClick={() => handleShare(post._id, post.title)}
+//                 onClick={() => handleShare(post.id)}
 //               >
 //                 <Share className="w-4 h-4" />
 //               </div>

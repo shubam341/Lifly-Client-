@@ -34,7 +34,7 @@ interface Post {
 const PostDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const {user, isAuthenticated, getAccessTokenSilently, loginWithRedirect } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently, loginWithRedirect } = useAuth0();
 
   const [post, setPost] = useState<Post | null>(null);
   const [comment, setComment] = useState("");
@@ -48,7 +48,7 @@ const PostDetail = () => {
   const postImageRef = useRef<HTMLDivElement>(null);
 
   const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/posts`;
-  // const LIKES_URL = `${import.meta.env.VITE_BACKEND_URL}/api/likes`; 
+  const LIKES_URL = `${import.meta.env.VITE_BACKEND_URL}/api/likes`; 
 
   // ✅ Robust media URL normalizer
   const getMediaUrl = (mediaPath: string | undefined) => {
@@ -101,7 +101,7 @@ const PostDetail = () => {
   if (!post) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   // 🔹 Event handlers
-
+  const handleLike = () => setIsLiked(!isLiked);
   const handleFollow = () => setIsFollowed(!isFollowed);
   const handleSave = () => setIsSaved(!isSaved);
   const handleCommentLike = (commentId: number) => {
@@ -116,42 +116,7 @@ const PostDetail = () => {
     }
   };
 
-  const handleLike = async () => {
-  if (!isAuthenticated) return loginWithRedirect();
-
-  try {
-    const token = await getAccessTokenSilently();
-
-    if (!user || !user.sub) throw new Error("User ID not found");
-
-    const method = isLiked ? "DELETE" : "POST";
-
-    const res = await fetch(`${import.meta.env.VITE_LIKES_SERVICE_URL}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ postId: post!._id, userId: user.sub }),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Failed to update like");
-    }
-
-    // Update UI instantly
-    setIsLiked(!isLiked);
-    setPost((prev) =>
-      prev
-        ? { ...prev, likes: isLiked ? prev.likes! - 1 : prev.likes! + 1 }
-        : prev
-    );
-  } catch (err: any) {
-    console.error("Error updating like:", err.message);
-  }
-};
-
+  
 
   const handleShare = async () => {
     const postUrl = `${window.location.origin}/post/${post._id}`;
