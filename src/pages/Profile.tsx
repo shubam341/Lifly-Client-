@@ -65,12 +65,13 @@ const Profile = () => {
       }
 
       const data = await res.json();
-      setProfile({
+setProfile({
   name: data.name || user.name || "",
   userId: data.userId || user.sub,
   bio: data.bio || "",
   avatar: getMediaUrl(data.profilePicture) || user.picture || "/placeholder.svg",
 });
+
 
     } catch (err: any) {
       console.error("Error fetching profile:", err.message);
@@ -260,10 +261,11 @@ const getMediaUrl = (mediaPath: string | undefined) => {
               <div className="flex items-start space-x-4 mb-2">
                 <div className="relative">
                   <Avatar className="w-20 h-20 border-2 border-white/20">
-                    <AvatarImage src={profile.avatar} />
-                    <AvatarFallback className="bg-orange-500 text-white text-2xl">
+                  <AvatarImage src={profile.avatar || "/placeholder.svg"} />
+
+                    {/* <AvatarFallback className="bg-orange-500 text-white text-2xl">
                       {profile.name ? profile.name[0] : "U"}
-                    </AvatarFallback>
+                    </AvatarFallback> */}
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
                     <span className="text-xs">+</span>
