@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Heart, MessageCircle, Share, MoreHorizontal, Send, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Share, MoreHorizontal, Send, Bookmark } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -28,6 +28,7 @@ interface Post {
   commentsList?: Comment[];
   isFollowed?: boolean;
   isSaved?: boolean;
+  createdAt?: string;
 }
 
 const PostDetail = () => {
@@ -45,18 +46,18 @@ const PostDetail = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   const postImageRef = useRef<HTMLDivElement>(null);
-  const API_URL = import.meta.env.VITE_POST_SERVICE_URL || "http://localhost:5005";
 
-  // 🔹 Normalize media URLs
+  const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/posts`;
+
+  // ✅ Robust media URL normalizer
   const getMediaUrl = (mediaPath: string | undefined) => {
-    if (!mediaPath) return "/placeholder.svg";
-
-    // Replace localhost or insecure HTTP with backend URL
+    if (!mediaPath) return "";
     if (mediaPath.startsWith("http")) {
-      return mediaPath.replace("https://lifly-ecommerce-server.onrender.com", import.meta.env.VITE_BACKEND_URL);
+      return mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL);
     }
-
-    // Relative path from backend
+    if (mediaPath.startsWith("/uploads/")) {
+      return `${import.meta.env.VITE_BACKEND_URL}${mediaPath}`;
+    }
     return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
   };
 
@@ -113,10 +114,7 @@ const PostDetail = () => {
       setComment("");
     }
   };
-  const handleRestrict = () => alert("User Restricted!");
-  const handleBlock = () => alert("User Blocked!");
 
-  // 🔹 Share post
   const handleShare = async () => {
     const postUrl = `${window.location.origin}/post/${post._id}`;
     if (navigator.share) {
@@ -137,31 +135,19 @@ const PostDetail = () => {
       }
     }
   };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border z-10">
         <div className="flex items-center justify-between px-4 py-3 relative">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            {/* <ArrowLeft className="h-6 w-6" /> */}
+            ←
           </Button>
           <h1 className="text-lg font-semibold">{post.title || "Post"}</h1>
-
-          <div className="relative">
-            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(!menuOpen)}>
-              <MoreHorizontal className="h-6 w-6" />
-            </Button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 w-32 bg-card border border-border rounded-md shadow-lg z-20">
-                <Button variant="ghost" className="w-full justify-start px-4 py-2" onClick={handleRestrict}>
-                  Restrict
-                </Button>
-                <Button variant="ghost" className="w-full justify-start px-4 py-2" onClick={handleBlock}>
-                  Block
-                </Button>
-              </div>
-            )}
-          </div>
+          <Button variant="ghost" size="icon" onClick={() => setMenuOpen(!menuOpen)}>
+            <MoreHorizontal className="h-6 w-6" />
+          </Button>
         </div>
       </div>
 
@@ -192,9 +178,8 @@ const PostDetail = () => {
               </Avatar>
               <div>
                 <h3 className="font-semibold text-sm">{post.authorName}</h3>
-                {/* Actual timestamp */}
                 <p className="text-muted-foreground text-xs">
-                  {new Date(post.createdAt).toLocaleString()}
+                  {post.createdAt ? new Date(post.createdAt).toLocaleString() : ""}
                 </p>
               </div>
             </div>
@@ -208,11 +193,8 @@ const PostDetail = () => {
           </div>
 
           <div className="px-4 py-3">
-            {/* Title */}
             <h1 className="text-lg font-bold">{post.title}</h1>
-            {/* Actual bio */}
             {post.bio && <p className="text-sm text-gray-600 mt-1">{post.bio}</p>}
-
             <Button variant="ghost" className="p-0 h-auto text-muted-foreground hover:bg-transparent text-sm font-normal mt-2">
               View all {post.comments || 0} comments
             </Button>
@@ -233,7 +215,7 @@ const PostDetail = () => {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="flex-1 rounded-full border border-muted-foreground/20 px-4 py-2 text-sm"
-              onKeyPress={(e) => e.key === 'Enter' && handleSendComment()}
+              onKeyPress={(e) => e.key === "Enter" && handleSendComment()}
             />
             <Button size="icon" onClick={handleSendComment} disabled={!comment.trim()} className="rounded-full w-8 h-8 flex items-center justify-center">
               <Send className="w-4 h-4" />

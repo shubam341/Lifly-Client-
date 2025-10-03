@@ -21,28 +21,24 @@ interface Post {
   category?: string;
 }
 
-
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Explore");
   const [activeCategory, setActiveCategory] = useState("All"); 
   const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
 
-  const { isAuthenticated, loginWithRedirect, getAccessTokenSilently } = useAuth0();
-
   const tabs = ["Following", "Explore", "Nearby"];
   const categories = ["All", "Fashion", "Personal care", "Food", "Home", "Health", "Travel"];
 
   // 🔹 Helper to generate full media URL
-const getMediaUrl = (mediaPath: string | undefined) => {
-  if (!mediaPath) return "";
-  if (mediaPath.startsWith("http")) {
-    // Replace localhost with Render domain if deploying
-    return mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL);
-  }
-  return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
-};
-
+  const getMediaUrl = (mediaPath: string | undefined) => {
+    if (!mediaPath) return "";
+    if (mediaPath.startsWith("http")) {
+      // Replace localhost with Render domain if deploying
+      return mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL);
+    }
+    return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
+  };
 
   // 🔹 Fetch posts and map to frontend format
   useEffect(() => {
@@ -51,22 +47,21 @@ const getMediaUrl = (mediaPath: string | undefined) => {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/posts`);
         const data = await res.json();
 
-    const mappedPosts: Post[] = data.map((p: any) => ({
-  id: p._id,
-  title: p.title,
-  image: getMediaUrl(p.mediaUrl),
-  username: p.authorName,
-  avatar: p.authorAvatar ? getMediaUrl(p.authorAvatar) : "",// blank if not uploaded
-  description: p.bio || "",
-  category: p.category,
-  likes: p.likesCount || 0,
-  comments: p.commentsCount || 0,
-  createdAt: p.createdAt,
-  isFollowed: p.isFollowed || false,
-  tabs: p.tabs || [],
-  commentsList: p.commentsList || [],
-}));
-
+        const mappedPosts: Post[] = data.map((p: any) => ({
+          id: p._id,
+          title: p.title,
+          image: getMediaUrl(p.mediaUrl),
+          username: p.authorName,
+          avatar: p.authorAvatar ? getMediaUrl(p.authorAvatar) : "", // blank if not uploaded
+          description: p.bio || "",
+          category: p.category,
+          likes: p.likesCount || 0,
+          comments: p.commentsCount || 0,
+          createdAt: p.createdAt,
+          isFollowed: p.isFollowed || false,
+          tabs: p.tabs || [],
+          commentsList: p.commentsList || [],
+        }));
 
         setPosts(mappedPosts);
       } catch (err) {
@@ -95,25 +90,6 @@ const getMediaUrl = (mediaPath: string | undefined) => {
 
     return false;
   });
-
-  // 🔹 Backend test function
-  const testBackend = async () => {
-    if (!isAuthenticated) {
-      loginWithRedirect();
-      return;
-    }
-
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/protected`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      console.log("✅ Backend response:", data);
-    } catch (err) {
-      console.error("❌ Backend error:", err);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -174,13 +150,6 @@ const getMediaUrl = (mediaPath: string | undefined) => {
         ) : (
           <PostGrid posts={filteredPosts} />
         )}
-      </div>
-
-      {/* Backend test button */}
-      <div className="mt-8 flex justify-center">
-        <Button onClick={testBackend}>
-          {isAuthenticated ? "Test Backend" : "Login to Test Backend"}
-        </Button>
       </div>
 
       <BottomNavigation />
