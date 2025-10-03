@@ -65,11 +65,12 @@ const Profile = () => {
 
       const data = await res.json();
       setProfile({
-        name: data.name || user.name || "",
-        userId: data.userId || user.sub,
-        bio: data.bio || "",
-        avatar: data.profilePicture || user.picture || "/placeholder.svg",
-      });
+  name: data.name || user.name || "",
+  userId: data.userId || user.sub,
+  bio: data.bio || "",
+  avatar: getMediaUrl(data.profilePicture) || user.picture || "/placeholder.svg",
+});
+
     } catch (err: any) {
       console.error("Error fetching profile:", err.message);
     }
