@@ -330,49 +330,57 @@ const EditProfile = () => {
     navigate("/profile");
   };
 
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
-      const profileData = {
-        auth0Id: user.sub,
-        name: formData.name,
-        // userId: formData.userId,
-        bio: formData.bio,
-        profilePicture: formData.avatar,
-      };
+ const handleSave = async () => {
+  setIsLoading(true);
+  try {
+    if (!user) return;
 
-      const response = await fetch(`${BASE_URL}/${encodeURIComponent(user.sub)}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(profileData),
-      });
+    const token = await getAccessTokenSilently({ audience: "https://myapp-api" });
+    const formDataToSend = new FormData();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update profile");
-      }
-
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated!",
-      });
-
-      navigate("/profile", { state: { updatedProfile: profileData } });
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("bio", formData.bio);
+    formDataToSend.append("email", user.email || "");
+    
+    // Append file if selected
+    const file = galleryInputRef.current?.files?.[0] || cameraInputRef.current?.files?.[0];
+    if (file) {
+      formDataToSend.append("avatar", file); // must match multer field name
     }
-  };
+
+    const response = await fetch(`${BASE_URL}/${encodeURIComponent(user.sub)}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formDataToSend,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update profile");
+    }
+
+    const updatedProfile = await response.json();
+
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been successfully updated!",
+    });
+
+    navigate("/profile", { state: { updatedProfile } });
+  } catch (error: any) {
+    console.error(error);
+    toast({
+      title: "Error",
+      description: error.message || "Failed to update profile",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   if (isFetching) {
     return <div className="min-h-screen flex items-center justify-center">Loading profile...</div>;

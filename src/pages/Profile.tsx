@@ -50,7 +50,6 @@ const Profile = () => {
       const userId = encodeURIComponent(user.sub);
       const API_URL = import.meta.env.VITE_USER_SERVICE_URL;
 
-      
       const res = await fetch(`${API_URL}/${userId}`, {
         method: "GET",
         headers: {
@@ -65,46 +64,47 @@ const Profile = () => {
       }
 
       const data = await res.json();
-setProfile({
-  name: data.name || user.name || "",
-  userId: data.userId || user.sub,
-  bio: data.bio || "",
-  avatar: getMediaUrl(data.profilePicture) || user.picture || "/placeholder.svg",
-});
-
-
+      setProfile({
+        name: data.name || user.name || "",
+        userId: data.userId || user.sub,
+        bio: data.bio || "",
+        avatar: getMediaUrl(data.profilePicture) || user.picture || "/placeholder.svg",
+      });
     } catch (err: any) {
       console.error("Error fetching profile:", err.message);
     }
   };
 
+  // ✅ Updated fetchUserPosts to fetch only the posts uploaded by this user
   const fetchUserPosts = async () => {
-  if (!user) return;
-  try {
-    const API_URL = import.meta.env.VITE_POST_SERVICE_URL;
-    const res = await fetch(`${API_URL}?authorId=${encodeURIComponent(user.sub)}`);
-    if (!res.ok) throw new Error("Failed to fetch posts");
-    const data = await res.json();
+    if (!user) return;
+    try {
+      const API_URL = import.meta.env.VITE_POST_SERVICE_URL;
 
-    // Map posts to include proper media URL
-    const mappedPosts = data.map((post: any) => ({
-      ...post,
-      mediaUrl: getMediaUrl(post.mediaUrl), // <-- fix here
-    }));
+      // Fetch posts by specific user
+      const res = await fetch(`${API_URL}/user/${encodeURIComponent(user.sub)}`);
+      if (!res.ok) throw new Error("Failed to fetch posts");
 
-    setUserPosts(mappedPosts);
-  } catch (err) {
-    console.error("Error fetching posts:", err);
-  }
-};
+      const data = await res.json();
 
-const getMediaUrl = (mediaPath: string | undefined) => {
-  if (!mediaPath) return "/placeholder.svg";
-  return mediaPath.startsWith("http")
-    ? mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL)
-    : `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
-};
+      const mappedPosts = data.map((post: any) => ({
+        ...post,
+        mediaUrl: getMediaUrl(post.mediaUrl),
+        authorAvatar: getMediaUrl(post.authorAvatar),
+      }));
 
+      setUserPosts(mappedPosts);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    }
+  };
+
+  const getMediaUrl = (mediaPath: string | undefined) => {
+    if (!mediaPath) return "/placeholder.svg";
+    return mediaPath.startsWith("http")
+      ? mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL)
+      : `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
+  };
 
   useEffect(() => {
     const updatedProfile = (location.state as any)?.updatedProfile;
@@ -165,7 +165,6 @@ const getMediaUrl = (mediaPath: string | undefined) => {
   const filteredPosts = userPosts.filter((post) =>
     post.title?.toLowerCase().includes(query.toLowerCase())
   );
-
   return (
     <div className={`flex flex-col min-h-screen ${backgrounds[bgVariant]}`}>
       {showSettings ? (

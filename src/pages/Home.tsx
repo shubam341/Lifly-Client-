@@ -31,14 +31,33 @@ const Home = () => {
   const categories = ["All", "Fashion", "Personal care", "Food", "Home", "Health", "Travel"];
 
   // 🔹 Helper to generate full media URL
-  const getMediaUrl = (mediaPath: string | undefined) => {
-    if (!mediaPath) return "";
-    if (mediaPath.startsWith("http")) {
-      // Replace localhost with Render domain if deploying
-      return mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL);
+  // const getMediaUrl = (mediaPath: string | undefined) => {
+  //   if (!mediaPath) return "";
+  //   if (mediaPath.startsWith("http")) {
+  //     // Replace localhost with Render domain if deploying
+  //     return mediaPath.replace("http://localhost:5005", import.meta.env.VITE_BACKEND_URL);
+  //   }
+  //   return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
+  // };
+
+const getMediaUrl = (mediaPath: string | undefined) => {
+  if (!mediaPath) return "";
+
+  const backendURL = import.meta.env.VITE_BACKEND_URL; // must be HTTPS
+
+  // If the URL is already full
+  if (mediaPath.startsWith("http")) {
+    // If it's pointing to localhost during dev, replace it
+    if (mediaPath.includes("localhost")) {
+      return mediaPath.replace("http://localhost:5005", backendURL);
     }
-    return `${import.meta.env.VITE_BACKEND_URL}/uploads/${mediaPath}`;
-  };
+    return mediaPath; // already valid URL
+  }
+
+  // Relative path → prepend backend URL
+  return `${backendURL}/uploads/${mediaPath}`;
+};
+
 
   // 🔹 Fetch posts and map to frontend format
   useEffect(() => {

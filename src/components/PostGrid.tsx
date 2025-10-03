@@ -1,5 +1,6 @@
 import { Heart, MessageCircle, Share } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // ✅ add AvatarImage
+
 import { useNavigate } from "react-router-dom";
 import { Post } from "@/types/Post";
 
@@ -80,12 +81,18 @@ const PostGrid: React.FC<PostGridProps> = ({ posts }) => {
             </div>
 
             {/* Author info */}
-            <div className="flex items-center space-x-1 mt-1">
-              <Avatar className="w-6 h-6">
-                <AvatarFallback>{post.username ? post.username[0] : "U"}</AvatarFallback>
-              </Avatar>
-              <p className="text-xs text-gray-500 truncate">{post.username}</p>
-            </div>
+     {/* Author info */}
+<div className="flex items-center space-x-1 mt-1">
+  <Avatar className="w-6 h-6">
+    {post.avatar ? (
+      <AvatarImage src={post.avatar} alt={post.username} />
+    ) : (
+      <AvatarFallback>{post.username ? post.username[0] : "U"}</AvatarFallback>
+    )}
+  </Avatar>
+  <p className="text-xs text-gray-500 truncate">{post.username}</p>
+</div>
+
 
             {/* Stats */}
             <div className="flex justify-between text-gray-600 mt-1 px-1">
