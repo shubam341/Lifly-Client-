@@ -50,6 +50,7 @@ const Profile = () => {
       const userId = encodeURIComponent(user.sub);
       const API_URL = import.meta.env.VITE_USER_SERVICE_URL;
 
+
       const res = await fetch(`${API_URL}/${userId}`, {
         method: "GET",
         headers: {
@@ -79,7 +80,8 @@ const Profile = () => {
   const fetchUserPosts = async () => {
     if (!user) return;
     try {
-      const API_URL = import.meta.env.VITE_POST_SERVICE_URL;
+
+  const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/posts`;
       const res = await fetch(`${API_URL}?authorId=${encodeURIComponent(user.sub)}`);
       if (!res.ok) throw new Error("Failed to fetch posts");
       const data = await res.json();
