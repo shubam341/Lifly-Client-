@@ -6,6 +6,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { useNavigate } from "react-router-dom";
 import FollowingPage from "./Followingpage"; 
 import { useAuth0 } from "@auth0/auth0-react";
+import { getLikes } from "@/api/likeApi";
 
 // 🔹 Post type for frontend
 interface Post {
@@ -60,37 +61,50 @@ const getMediaUrl = (mediaPath: string | undefined) => {
 
 
   // 🔹 Fetch posts and map to frontend format
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/posts`);
-        const data = await res.json();
+  
+useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/posts`);
+      const data = await res.json();
 
-        const mappedPosts: Post[] = data.map((p: any) => ({
-          id: p._id,
-          title: p.title,
-          image: getMediaUrl(p.mediaUrl),
-          username: p.authorName,
-          avatar: p.authorAvatar ? getMediaUrl(p.authorAvatar) : "", // blank if not uploaded
-          description: p.bio || "",
-          category: p.category,
-          likes: p.likesCount || 0,
-          comments: p.commentsCount || 0,
-          createdAt: p.createdAt,
-          isFollowed: p.isFollowed || false,
-          tabs: p.tabs || [],
-          commentsList: p.commentsList || [],
-        }));
+      const mappedPosts: Post[] = await Promise.all(
+        data.map(async (p: any) => {
+          // ✅ fetch real likes from like service
+          let likesCount = 0;
+          try {
+            const likesData = await getLikes(p._id);
+            likesCount = likesData.count;
+          } catch (err) {
+            console.error("Error fetching likes for post:", p._id, err);
+          }
 
-        setPosts(mappedPosts);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-      }
-    };
+          return {
+            id: p._id,
+            title: p.title,
+            image: getMediaUrl(p.mediaUrl),
+            username: p.authorName,
+            avatar: p.authorAvatar ? getMediaUrl(p.authorAvatar) : "",
+            description: p.bio || "",
+            category: p.category,
+            likes: likesCount,
+            comments: p.commentsCount || 0,
+            createdAt: p.createdAt,
+            isFollowed: p.isFollowed || false,
+            tabs: p.tabs || [],
+            commentsList: p.commentsList || [],
+          };
+        })
+      );
 
-    fetchPosts();
-  }, []);
+      setPosts(mappedPosts);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    }
+  };
 
+  fetchPosts();
+}, []);
   // 🔹 Filter posts by tab and category
   const filteredPosts: Post[] = posts.filter((post) => {
     if (activeCategory === "All") {
